@@ -42,7 +42,7 @@ local testset = mnist.testdataset()
 print(trainset.size) -- to retrieve the size
 print(testset.size) -- to retrieve the size
 
-no_of_training_cases = 1000
+no_of_training_cases = 60000
 
 for p=1,no_of_training_cases do
 	print(p)
@@ -67,37 +67,5 @@ for p=1,no_of_training_cases do
     cnn:updateParameters(0.3)
 end
 
-correct_matches = 0
-accuracy = 0
-total = 0
-
-print('Done training')
-
-no_of_tests = 10000
--- Test the network
-for q=1,no_of_tests do
-	print(q)
-	local example = testset[q]
-	local input = example.x
-	local output_val = example.y
-    input:resize(1,28,28)
-    input = input:double()
-    input = input / 255.0
-    results = cnn:forward(input)
-    best_result = torch.max(results)
-    local cur_acc = results[output_val+1]
-    total = 0
-    for p=1,10 do
-    	total = total + results[p]
-    	if results[p] == best_result then
-    		answer = p-1
-    	end
-    end
-    accuracy = accuracy + cur_acc / total
-    if answer == output_val then
-    	correct_matches = correct_matches + 1
-    end
-end
-print('Final Results:')
-print('Correct Matches = ' .. correct_matches .. '/' .. no_of_tests)
-print('Accuracy = ' .. accuracy / no_of_tests)
+print('Done training, saving model if needed')
+torch.save('model.torch', cnn)
