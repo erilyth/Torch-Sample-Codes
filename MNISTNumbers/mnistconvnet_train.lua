@@ -36,6 +36,9 @@ cnn:add(nn.Tanh())
 
 criterion = nn.MSECriterion()
 
+-- Run the training 'iterations' number of times
+iterations = 5
+
 local trainset = mnist.traindataset()
 local testset = mnist.testdataset()
 
@@ -44,27 +47,30 @@ print(testset.size) -- to retrieve the size
 
 no_of_training_cases = 60000
 
-for p=1,no_of_training_cases do
-	print(p)
-	local example = trainset[p]
-	local input = example.x
-	local output_val = example.y
-    local output = torch.Tensor(10);
-    input:resize(1,28,28)
-    input = input:double()
-   	input = input / 255.0
-    for k=1,10 do
-        output[k] = 0.0
+for tt=1,iterations do
+    print('Epoch = ' .. tt)
+    for p=1,no_of_training_cases do
+	    print(p)
+	    local example = trainset[p]
+	    local input = example.x
+	    local output_val = example.y
+        local output = torch.Tensor(10);
+        input:resize(1,28,28)
+        input = input:double()
+   	    input = input / 255.0
+        for k=1,10 do
+            output[k] = 0.0
+        end
+        output[output_val+1] = 1.0
+        -- Forward prop in the neural network
+        criterion:forward(cnn:forward(input), output)
+        -- Reset gradient accumulation
+        cnn:zeroGradParameters()
+        -- Accumulate gradients and back propogate
+        cnn:backward(input, criterion:backward(cnn.output, output))
+        -- Update with a learning rate
+        cnn:updateParameters(0.3)
     end
-    output[output_val+1] = 1.0
-    -- Forward prop in the neural network
-    criterion:forward(cnn:forward(input), output)
-    -- Reset gradient accumulation
-    cnn:zeroGradParameters()
-    -- Accumulate gradients and back propogate
-    cnn:backward(input, criterion:backward(cnn.output, output))
-    -- Update with a learning rate
-    cnn:updateParameters(0.3)
 end
 
 print('Done training, saving model if needed')
