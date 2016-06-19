@@ -15,19 +15,24 @@ classes = {'airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'hors
 -- Parametrs for SpatialMaxPooling = (width, height, x_stride, y_stride, x_padding, y_padding)
 -- Input = 3*32*32 image, Output = 10 sized vector
 cnn = nn.Sequential()
-cnn:add(nn.SpatialConvolution(3,64,5,5,1,1,2,2))
+cnn:add(nn.SpatialConvolution(3,32,5,5,1,1,2,2))
 cnn:add(nn.Tanh())
 cnn:add(nn.SpatialMaxPooling(2,2,2,2))
+cnn:add(nn.SpatialConvolution(32,64,5,5,1,1,2,2))
+cnn:add(nn.Tanh())
+cnn:add(nn.SpatialConvolution(64,128,5,5,1,1,2,2))
+cnn:add(nn.Tanh())
+cnn:add(nn.SpatialMaxPooling(2,2,2,2))
+cnn:add(nn.SpatialConvolution(128,512,3,3,1,1,1,1))
+cnn:add(nn.Tanh())
+cnn:add(nn.Dropout(0.2))
+cnn:add(nn.SpatialConvolution(512,512,3,3,1,1,1,1))
+cnn:add(nn.Tanh())
+cnn:add(nn.Reshape(512*8*8))
+cnn:add(nn.Linear(512*8*8,512))
 cnn:add(nn.Dropout(0.3))
-cnn:add(nn.SpatialConvolution(64,256,3,3,1,1,1,1))
 cnn:add(nn.Tanh())
-cnn:add(nn.Dropout(0.15))
-cnn:add(nn.SpatialConvolution(256,32,3,3,1,1,1,1))
-cnn:add(nn.Tanh())
-cnn:add(nn.Reshape(32*16*16))
-cnn:add(nn.Linear(32*16*16,128))
-cnn:add(nn.Tanh())
-cnn:add(nn.Linear(128,10))
+cnn:add(nn.Linear(512,10))
 cnn:add(nn.Tanh())
 
 criterion = nn.MSECriterion()
@@ -66,15 +71,17 @@ for tt=1,iterations do
 	        end
 	        output[output_val+1] = 1.0
 	        -- Forward prop in the neural network
-	        criterion:forward(cnn:forward(input), output)
+	        local outputs_cur = cnn:forward(input)
+	        local errs = criterion:forward(outputs_cur, output)
+	        local df_errs = criterion:backward(outputs_cur, output)
 	        -- Reset gradient accumulation
 	        cnn:zeroGradParameters()
 	        -- Accumulate gradients and back propogate
-	        cnn:backward(input, criterion:backward(cnn.output, output))
+	        cnn:backward(input, df_errs)
 	        -- Update with a learning rate
-	        cnn:updateParameters(0.03)
-	       	print(p .. " => " .. output_val)
-	    end
+	        cnn:updateParameters(0.015)
+	        print(p .. " => " .. output_val)
+        end
 	end
 end
 
