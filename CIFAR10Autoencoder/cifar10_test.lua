@@ -46,8 +46,9 @@ for q=1,no_of_tests do
     local output_val = image_labels[p]
     input = input:double()
     input = input / 255.0
-    results = cnn:forward(input)
+    results = cnn:forward(input):exp() -- Since we use logsoftmax, the output is the exponent of probabilites
     best_result = torch.max(results)
+    print(results)
     local output_val = image_labels[q]
     local cur_acc = results[output_val+1]
     total = 0
