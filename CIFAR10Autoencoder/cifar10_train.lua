@@ -11,34 +11,40 @@ require "image"
 
 classes = {'airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'}
 
+new_model = 0
+
 -- Parametrs for SpatialConvolution = (inputlayers, outputlayers, kernel_width, kernel_height, x_stride, y_stride, x_padding, y_padding)
 -- Parametrs for SpatialMaxPooling = (width, height, x_stride, y_stride, x_padding, y_padding)
 -- Input = 3*32*32 image, Output = 10 sized vector
-cnn = nn.Sequential()
-cnn:add(nn.SpatialConvolution(3,32,5,5,1,1,2,2))
-cnn:add(nn.Tanh())
-cnn:add(nn.SpatialMaxPooling(2,2,2,2))
-cnn:add(nn.SpatialConvolution(32,64,5,5,1,1,2,2))
-cnn:add(nn.Tanh())
-cnn:add(nn.SpatialConvolution(64,128,5,5,1,1,2,2))
-cnn:add(nn.Tanh())
-cnn:add(nn.SpatialMaxPooling(2,2,2,2))
-cnn:add(nn.SpatialConvolution(128,512,3,3,1,1,1,1))
-cnn:add(nn.Tanh())
-cnn:add(nn.Dropout(0.2))
-cnn:add(nn.SpatialConvolution(512,512,3,3,1,1,1,1))
-cnn:add(nn.Tanh())
-cnn:add(nn.Reshape(512*8*8))
-cnn:add(nn.Linear(512*8*8,512))
-cnn:add(nn.Dropout(0.3))
-cnn:add(nn.Tanh())
-cnn:add(nn.Linear(512,10))
-cnn:add(nn.Tanh())
+if new_model==1 then
+    cnn = nn.Sequential()
+    cnn:add(nn.SpatialConvolution(3,32,5,5,1,1,2,2))
+    cnn:add(nn.Tanh())
+    cnn:add(nn.SpatialMaxPooling(2,2,2,2))
+    cnn:add(nn.SpatialConvolution(32,64,5,5,1,1,2,2))
+    cnn:add(nn.Tanh())
+    cnn:add(nn.SpatialConvolution(64,128,5,5,1,1,2,2))
+    cnn:add(nn.Tanh())
+    cnn:add(nn.SpatialMaxPooling(2,2,2,2))
+    cnn:add(nn.SpatialConvolution(128,512,3,3,1,1,1,1))
+    cnn:add(nn.Tanh())
+    cnn:add(nn.Dropout(0.2))
+    cnn:add(nn.SpatialConvolution(512,512,3,3,1,1,1,1))
+    cnn:add(nn.Tanh())
+    cnn:add(nn.Reshape(512*8*8))
+    cnn:add(nn.Linear(512*8*8,512))
+    cnn:add(nn.Dropout(0.3))
+    cnn:add(nn.Tanh())
+    cnn:add(nn.Linear(512,10))
+    cnn:add(nn.Tanh())
+else
+    cnn = torch.load('model.torch')
+end
 
 criterion = nn.MSECriterion()
 
 -- Run the training 'iterations' number of times
-iterations = 5
+iterations = 1
 
 for tt=1,iterations do
     print('Epoch = ' .. tt)
@@ -79,7 +85,7 @@ for tt=1,iterations do
 	        -- Accumulate gradients and back propogate
 	        cnn:backward(input, df_errs)
 	        -- Update with a learning rate
-	        cnn:updateParameters(0.015)
+	        cnn:updateParameters(0.01)
 	        print(p .. " => " .. output_val)
         end
 	end

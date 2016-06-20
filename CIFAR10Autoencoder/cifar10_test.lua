@@ -63,7 +63,11 @@ for q=1,no_of_tests do
     end
     answers[answer+1][1] = answers[answer+1][1] + 1
     print(results)
-    print(q .. ' => ' .. output_val .. '|' .. answer)
+    res="No"
+    if output_val == answer then
+        res="Yes"
+    end
+    print(q .. ' => ' .. output_val .. '|' .. answer .. ' => ' .. res)
 end
 print('Final Results:')
 print('Correct Matches = ' .. correct_matches .. '/' .. no_of_tests)
