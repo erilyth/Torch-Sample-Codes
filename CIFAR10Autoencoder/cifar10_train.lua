@@ -12,6 +12,7 @@ require "image"
 classes = {'airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'}
 
 new_model = 0
+torch.setnumthreads(2)
 
 -- Parametrs for SpatialConvolution = (inputlayers, outputlayers, kernel_width, kernel_height, x_stride, y_stride, x_padding, y_padding)
 -- Parametrs for SpatialMaxPooling = (width, height, x_stride, y_stride, x_padding, y_padding)
