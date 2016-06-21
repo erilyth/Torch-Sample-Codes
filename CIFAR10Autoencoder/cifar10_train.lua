@@ -50,7 +50,7 @@ end
 criterion = nn.ClassNLLCriterion()
 
 -- Run the training 'iterations' number of times
-iterations = 5
+iterations = 3
 
 for tt=1,iterations do
     print('Epoch = ' .. tt)
@@ -87,6 +87,14 @@ for tt=1,iterations do
             end
             -- print(outputs_cur) -- The log probabilites
             print(outputs_fin) -- The probabilites of the input corresponding to each class
+	        local results = outputs_fin
+	        best_result = torch.max(results)
+	        local answer = -1
+	        for p=1,10 do
+		    	if results[p] == best_result then
+		    		answer = p-1
+		    	end
+		    end
 	        -- The criterion will take care that the actual output, ie the class no is compared with the log probabilities
 	        -- we get as output from the network
 	        local errs = criterion:forward(outputs_cur, output)
@@ -97,9 +105,15 @@ for tt=1,iterations do
 	        cnn:backward(input, df_errs)
 	        -- Update with a learning rate
 	        cnn:updateParameters(0.01)
-	        print(p .. " => " .. output_val)
+	        res = "No"
+	        if answer == output_val then
+	        	res = "Yes"
+	        end
+	        print(p .. " => " .. output_val .. "|" .. answer .. " => " .. res)
         end
 	end
+	print('Save model after each training epoch')
+	torch.save('model.torch', cnn)
 end
 
 print('Done training, saving model if needed')
