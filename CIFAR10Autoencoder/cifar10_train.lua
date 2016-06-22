@@ -22,25 +22,22 @@ if new_model==1 then
     cnn = nn.Sequential()
     cnn:add(nn.SpatialConvolution(3,128,5,5,1,1,2,2))
     cnn:add(nn.Tanh())
-    cnn:add(nn.ReLU())
     cnn:add(nn.Dropout(0.2))
     cnn:add(nn.SpatialMaxPooling(2,2,2,2))
     cnn:add(nn.SpatialConvolution(128,256,5,5,1,1,2,2))
     cnn:add(nn.Tanh())
-    cnn:add(nn.ReLU())
+    cnn:add(nn.Dropout(0.2))
+    cnn:add(nn.SpatialMaxPooling(2,2,2,2))
     cnn:add(nn.SpatialConvolution(256,512,5,5,1,1,2,2))
     cnn:add(nn.Tanh())
-    cnn:add(nn.ReLU())
     cnn:add(nn.Dropout(0.2))
     cnn:add(nn.SpatialMaxPooling(2,2,2,2))
     cnn:add(nn.SpatialConvolution(512,512,3,3,1,1,1,1))
     cnn:add(nn.Tanh())
-    cnn:add(nn.ReLU())
-    cnn:add(nn.Dropout(0.2))
-    cnn:add(nn.Reshape(512*8*8))
-    cnn:add(nn.Linear(512*8*8,512))
-    cnn:add(nn.Linear(512,256))
-    cnn:add(nn.Linear(256,10))
+    cnn:add(nn.Dropout(0.3))
+    cnn:add(nn.Reshape(512*4*4))
+    cnn:add(nn.Linear(512*4*4,512))
+    cnn:add(nn.Linear(512,10))
     cnn:add(nn.LogSoftMax())
 else
     cnn = torch.load('model.torch')
@@ -50,7 +47,7 @@ end
 criterion = nn.ClassNLLCriterion()
 
 -- Run the training 'iterations' number of times
-iterations = 3
+iterations = 10
 
 for tt=1,iterations do
     print('Epoch = ' .. tt)
@@ -86,7 +83,7 @@ for tt=1,iterations do
             	outputs_fin[tr] = math.exp(outputs_cur[tr])
             end
             -- print(outputs_cur) -- The log probabilites
-            print(outputs_fin) -- The probabilites of the input corresponding to each class
+            -- print(outputs_fin) -- The probabilites of the input corresponding to each class
 	        local results = outputs_fin
 	        best_result = torch.max(results)
 	        local answer = -1
