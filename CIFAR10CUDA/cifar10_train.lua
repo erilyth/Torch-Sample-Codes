@@ -41,9 +41,9 @@ if new_model==1 then
     cnn:add(nn.SpatialMaxPooling(2,2,2,2))
     cnn:add(nn.Dropout(0.2))
 
-    cnn:add(nn.SpatialConvolution(256,128,3,3,1,1,1,1))
+    cnn:add(nn.SpatialConvolution(256,256,3,3,1,1,1,1))
     cnn:add(nn.ReLU())
-    cnn:add(nn.SpatialConvolution(128,256,3,3,1,1,1,1))
+    cnn:add(nn.SpatialConvolution(256,256,3,3,1,1,1,1))
     cnn:add(nn.ReLU())
     cnn:add(nn.SpatialConvolution(256,512,3,3,1,1,1,1))
     cnn:add(nn.ReLU())
@@ -130,7 +130,7 @@ for tt=1,iterations do
 	        -- Accumulate gradients and back propogate
 	        cnn:backward(input, df_errs)
 	        -- Update with a learning rate
-	        cnn:updateParameters(0.01)
+	        cnn:updateParameters(0.02)
 	        res = "No"
 	        if answer == output_val then
 	        	res = "Yes"
