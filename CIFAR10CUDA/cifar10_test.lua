@@ -8,6 +8,7 @@
 
 require "nn"
 require "image"
+require "cunn"
 
 correct_matches = 0
 accuracy = 0
@@ -18,7 +19,7 @@ use_cuda = 1
 cnn = torch.load('model.torch')
 
 if use_cuda == 1 then
-    cnn:cuda()
+    cnn = cnn:cuda()
 end
 
 print(cnn)
@@ -52,6 +53,9 @@ for q=1,no_of_tests do
     local output_val = image_labels[p]
     input = input:double()
     input = input / 255.0
+    if use_cuda == 1 then
+        input = input:cuda()
+    end
     results = cnn:forward(input):exp() -- Since we use logsoftmax, the output is the exponent of probabilites
     best_result = torch.max(results)
     print(results)

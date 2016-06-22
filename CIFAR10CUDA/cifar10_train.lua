@@ -9,7 +9,8 @@
 require "nn"
 require "image"
 require "math"
-require 'cutorch'
+require "cutorch"
+require "cunn"
 
 classes = {'airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'}
 
@@ -35,12 +36,12 @@ if new_model==1 then
     cnn:add(nn.ReLU())
     cnn:add(nn.SpatialConvolution(256,256,5,5,1,1,2,2))
     cnn:add(nn.ReLU())
-    cnn:add(nn.SpatialConvolution(256,64,5,5,1,1,2,2))
+    cnn:add(nn.SpatialConvolution(256,256,5,5,1,1,2,2))
     cnn:add(nn.ReLU())
     cnn:add(nn.SpatialMaxPooling(2,2,2,2))
     cnn:add(nn.Dropout(0.2))
 
-    cnn:add(nn.SpatialConvolution(64,128,3,3,1,1,1,1))
+    cnn:add(nn.SpatialConvolution(256,128,3,3,1,1,1,1))
     cnn:add(nn.ReLU())
     cnn:add(nn.SpatialConvolution(128,256,3,3,1,1,1,1))
     cnn:add(nn.ReLU())
@@ -66,8 +67,8 @@ end
 criterion = nn.ClassNLLCriterion()
 
 if use_cuda == 1 then
-	criterion:cuda()
-	cnn:cuda()
+	criterion = criterion:cuda()
+	cnn = cnn:cuda()
 end
 
 -- Run the training 'iterations' number of times
@@ -100,6 +101,10 @@ for tt=1,iterations do
             output[1] = output_val + 1 -- Just tell it which class the output belongs to (Indexed from 1 to 10)
 	        input = input:double()
 	   	    input = input / 255.0
+	   	    if use_cuda == 1 then
+	   	    	input = input:cuda()
+	   	    	output = output:cuda()
+	   	    end
 	        -- Forward prop in the neural network
 	        local outputs_cur = cnn:forward(input) -- The output it gives is a log probability of each class
             local outputs_fin = torch.Tensor(10)
@@ -107,7 +112,7 @@ for tt=1,iterations do
             	outputs_fin[tr] = math.exp(outputs_cur[tr])
             end
             -- print(outputs_cur) -- The log probabilites
-            print(outputs_fin) -- The probabilites of the input corresponding to each class
+            -- print(outputs_fin) -- The probabilites of the input corresponding to each class
 	        local results = outputs_fin
 	        best_result = torch.max(results)
 	        local answer = -1
