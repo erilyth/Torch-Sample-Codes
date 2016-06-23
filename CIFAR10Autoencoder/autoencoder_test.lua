@@ -8,6 +8,8 @@
 
 require "nn"
 require "image"
+require "qtwidget"
+require "os"
 
 function get_image(cur_image)
 	local cur_r = cur_image[{{1,1024}}]
@@ -38,16 +40,20 @@ data_subset = torch.load('test_batch.t7', 'ascii')
 image_data = data_subset.data:t()
 image_labels = data_subset.labels[1]
 
-no_of_tests = 1
+w = qtwidget.newwindow(100, 100)
+w2 = qtwidget.newwindow(100, 100)
+
+no_of_tests = 15
 -- Test the network
 for q=1,no_of_tests do
 	local cur_image = image_data[q]
-	image.display(get_image(cur_image) * 255.0)
+	image.display{image=(get_image(cur_image) * 255.0), win=w}
     local class = image_labels[p]
     input = cur_image:double()
     input = input / 255.0
     results = cnn:forward(input)
-    image.display(get_image(results) * 255.0)
+    image.display{image=(get_image(results) * 255.0), win=w2}
+    os.execute("sleep " .. tonumber(5))
     print(q)
 end
 print('Final Results:')
