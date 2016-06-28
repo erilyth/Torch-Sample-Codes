@@ -24,7 +24,7 @@ print(cnn)
 w = qtwidget.newwindow(100, 100)
 w2 = qtwidget.newwindow(100, 100)
 
-no_of_tests = 100
+no_of_tests = 10
 -- Test the network
 
 function scandir(directory)
@@ -71,7 +71,7 @@ for i=1,no_of_folders do
         -- Forward prop in the neural network
         local output = cnn:forward(input)
         image.display{image=(output * 255.0), win=w2}
-        os.execute("sleep " .. tonumber(0.3))
+        os.execute("sleep " .. tonumber(3))
         print(i,j)
     end
 end

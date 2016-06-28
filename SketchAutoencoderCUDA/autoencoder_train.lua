@@ -85,7 +85,7 @@ criterion = nn.MSECriterion()
 criterion = criterion:cuda()
 
 -- Run the training 'iterations' number of times
-iterations = 10
+iterations = 50
 updateRate = 1.5
 updateEndRate = 1
 updateDecay = (updateRate-updateEndRate)/iterations
