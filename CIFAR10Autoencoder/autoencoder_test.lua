@@ -51,11 +51,10 @@ for q=1,no_of_tests do
     local class = image_labels[p]
     input = cur_image:double()
     input = input / 255.0
+    input = input:cuda()
     results = cnn:forward(input)
     image.display{image=(get_image(results) * 255.0), win=w2}
     os.execute("sleep " .. tonumber(5))
     print(q)
 end
-print('Final Results:')
-print('Correct Matches = ' .. correct_matches .. '/' .. no_of_tests)
-print('Accuracy = ' .. accuracy / no_of_tests)
+print('End-x:')
