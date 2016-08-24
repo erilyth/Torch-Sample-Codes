@@ -9,6 +9,8 @@
 require "nn"
 require "image"
 require "math"
+require "cutorch"
+require "cunn"
 
 classes = {'airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'}
 

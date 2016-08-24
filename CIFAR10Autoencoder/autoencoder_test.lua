@@ -10,6 +10,8 @@ require "nn"
 require "image"
 require "qtwidget"
 require "os"
+require "cutorch"
+require "cunn"
 
 function get_image(cur_image)
 	local cur_r = cur_image[{{1,1024}}]
