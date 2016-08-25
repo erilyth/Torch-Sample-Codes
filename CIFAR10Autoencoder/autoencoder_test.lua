@@ -35,6 +35,8 @@ accuracy = 0
 total = 0
 
 cnn = torch.load('model.torch')
+cnn = cnn:float()
+torch.save('modelfinal.torch', cnn)
 
 print(cnn)
 
