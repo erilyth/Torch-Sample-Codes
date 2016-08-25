@@ -24,7 +24,6 @@ end
 
 new_model = 1
 use_cuda = 1
-torch.setnumthreads(8)
 
 -- Parametrs for SpatialConvolution = (inputlayers, outputlayers, kernel_width, kernel_height, x_stride, y_stride, x_padding, y_padding)
 -- Parametrs for SpatialMaxPooling = (width, height, x_stride, y_stride, x_padding, y_padding)
