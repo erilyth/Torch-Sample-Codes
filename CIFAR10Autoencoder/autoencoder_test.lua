@@ -10,8 +10,6 @@ require "nn"
 require "image"
 require "qtwidget"
 require "os"
-require "cutorch"
-require "cunn"
 
 function get_image(cur_image)
 	local cur_r = cur_image[{{1,1024}}]
@@ -34,8 +32,8 @@ correct_matches = 0
 accuracy = 0
 total = 0
 
-cnn = torch.load('model.torch')
-cnn = cnn:float()
+cnn = torch.load('modelfinal.torch')
+cnn = cnn:double()
 torch.save('modelfinal.torch', cnn)
 
 print(cnn)
@@ -55,7 +53,6 @@ for q=1,no_of_tests do
     local class = image_labels[p]
     input = cur_image:double()
     input = input / 255.0
-    input = input:cuda()
     results = cnn:forward(input)
     image.display{image=(get_image(results) * 255.0), win=w2}
     os.execute("sleep " .. tonumber(5))
