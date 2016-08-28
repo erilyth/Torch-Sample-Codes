@@ -12,9 +12,9 @@ require "math"
 require "qtwidget"
 require "os"
 
-w1 = qtwidget.newwindow(300, 300)
-w2 = qtwidget.newwindow(300, 300)
-w3 = qtwidget.newwindow(300, 300) -- Visualize convnet layers
+--w1 = qtwidget.newwindow(300, 300)
+--w2 = qtwidget.newwindow(300, 300)
+--w3 = qtwidget.newwindow(300, 300) -- Visualize convnet layers
 
 classes = {'airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'}
 
@@ -47,7 +47,7 @@ function error(a,b)
 	return err
 end
 
-new_model = 0
+new_model = 1
 use_cuda = 0
 
 -- Parametrs for SpatialConvolution = (inputlayers, outputlayers, kernel_width, kernel_height, x_stride, y_stride, x_padding, y_padding)
@@ -56,6 +56,9 @@ use_cuda = 0
 if new_model==1 then
     cnn = nn.Sequential()
     cnn:add(nn.View(3,32,32))
+    cnn:add(nn.Reshape(3*32*32))
+    cnn:add(nn.Linear(3*32*32,3*32*32))
+    cnn:add(nn.Reshape(3,32,32))
     cnn:add(nn.SpatialConvolution(3, 16, 3, 3, 1, 1, 1, 1))
     cnn:add(nn.ReLU(true))
     cnn:add(nn.SpatialMaxPooling(2, 2, 2, 2, 1, 1))
@@ -78,9 +81,9 @@ if new_model==1 then
     cnn:add(nn.SpatialConvolution(16, 3, 3, 3, 1, 1, 1, 1))
     cnn:add(nn.Sigmoid(true))
     cnn:add(nn.View(3*32*32))
-    
+    print('Creating a new network')
 else
-    cnn = torch.load('model.torch')
+    cnn = torch.load('model_full.torch')
     print('Using existing network')
 end
 
@@ -91,60 +94,50 @@ if use_cuda == 1 then
 end
 
 -- Run the training 'iterations' number of times
-iterations = 1
+iterations = 3
 
 for tt=1,iterations do
-	for iti=0,0 do
+	for iti=0,4 do
 		data_subset = torch.load('data_batch_' .. (iti+1) .. '.t7', 'ascii')
 		image_data = data_subset.data:t()
 		image_labels = data_subset.labels[1]
 		no_of_training_cases = 10000
-	    local cur_image = torch.rand(3,32,32)
+	    -- local cur_image = torch.rand(3,32,32)
+	    -- for j=1,32 do
+		-- 	for k=1,32 do
+		--		cur_image[1][j][k] = 1.0
+		--		cur_image[2][j][k] = 1.0
+		--		cur_image[3][j][k] = 1.0
+		--	end
+		-- end
 	    -- print(cur_image)
         -- Input can be either 3x32x32 or 3*32*32 vectors
-        input = cur_image:double()
-        image.display{image=(image.scale(get_image(image_data[5]), 300, 300, 'bilinear')), win=w1}
 	    for p=1,no_of_training_cases do
-		    -- local cur_image = image_data[p]
-	   	    output = image_data[5]:double() / 255.0
+	        input = image_data[p]:double() / 255.0
+	        output = image_data[p]:double() / 255.0
+	        -- image.display{image=(image.scale(get_image(output), 300, 300, 'bilinear')), win=w1}
 	   	    if use_cuda == 1 then
 	   	    	input = input:cuda()
 	   	    	output = output:cuda()
 	   	    end
-
-	   	    cur_input = input
-	   	    for layer_idx=1,cnn:size() do
-		        -- Forward prop in the neural network
-		        outputs_cur = cnn:get(layer_idx):forward(cur_input)
-		        cur_input = outputs_cur
-		    end
-
-		    cur_output = output
-		    for layer_idx=cnn:size(),2,-1 do
-		    	local layer = cnn:get(layer_idx)
-		    	local prevlayer = cnn:get(layer_idx-1)
-		        -- local errs = criterion:forward(outputs_cur, output)
-		        local df_errs = criterion:backward(layer.output, cur_output)
-		        cur_output = layer:backward(prevlayer.output, df_errs)
-		        -- Reset gradient accumulation
-		        -- Accumulate gradients and back propogate
-		        -- print(layer:backward(input, df_errs))
-	    	end
-	    	-- This is a 3x32x32 image since its after the View transform
-	    	df_errs_final = criterion:backward(cnn:get(1).output, cur_output)
-	    	final_img_err = cnn:get(1):backward(input, df_errs_final)
-	    	print(final_img_err:sum(), p, "Error: ", error(get_image(output),input))
-	    	-- print(df_errs_final:size())
-	    	input = input - 0.05*final_img_err
-	    	-- image.display{image=(get_image(outputs_cur) * 255.0), win=w}
-	        -- os.execute("sleep " .. tonumber(5))
-	        if p%20 == 0 then
-        		image.display{image=(image.scale(input * 255.0, 300, 300, 'bilinear')), win=w2}
-        		image.display{image=(image.scale(final_img_err * 255.0, 300, 300, 'bilinear')), win=w3}
-        	end
+	        outputs_cur = cnn:forward(input)
+	        local errs = criterion:forward(outputs_cur, output)
+	        local df_errs = criterion:backward(outputs_cur, output)
+	        -- cnn:zeroGradParameters()
+	        inputgrad = cnn:backward(input, df_errs)
+	        -- Accumulate gradients and back propogate
+	        cnn:updateParameters(0.05)
+	        -- input = input - 1 * inputgrad
+	        print(tt,iti,p,error(get_image(output),get_image(outputs_cur)))
+	        --if p%20 == 1 then
+	        --	image.display{image=(image.scale(get_image(input * 255.0), 300, 300, 'bilinear')), win=w2}
+        	--	image.display{image=(image.scale(get_image(inputgrad * 255.0), 300, 300, 'bilinear')), win=w3}
+        	--end
         end
 	end
+	print('Done training, saving model if needed')
+	torch.save('model_full.torch', cnn)
 end
 
--- print('Done training, saving model if needed')
--- torch.save('model.torch', cnn)
+print('Done training, saving model if needed')
+torch.save('model_full.torch', cnn)
