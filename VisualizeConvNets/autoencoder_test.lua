@@ -32,7 +32,7 @@ correct_matches = 0
 accuracy = 0
 total = 0
 
-cnn = torch.load('model.torch')
+cnn = torch.load('model_full.torch')
 cnn = cnn:double()
 
 print(cnn)

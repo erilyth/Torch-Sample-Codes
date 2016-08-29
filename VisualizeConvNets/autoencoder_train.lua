@@ -9,14 +9,14 @@
 require "nn"
 require "image"
 require "math"
---require "qtwidget"
+require "qtwidget"
 require "os"
-require "cunn"
-require "cutorch"
+--require "cunn"
+--require "cutorch"
 
---w1 = qtwidget.newwindow(300, 300)
---w2 = qtwidget.newwindow(300, 300)
---w3 = qtwidget.newwindow(300, 300) -- Visualize convnet layers
+w1 = qtwidget.newwindow(300, 300)
+w2 = qtwidget.newwindow(300, 300)
+w3 = qtwidget.newwindow(300, 300) -- Visualize convnet layers
 
 classes = {'airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'}
 
@@ -50,7 +50,7 @@ function error(a,b)
 end
 
 new_model = 1
-use_cuda = 1
+use_cuda = 0
 
 -- Parametrs for SpatialConvolution = (inputlayers, outputlayers, kernel_width, kernel_height, x_stride, y_stride, x_padding, y_padding)
 -- Parametrs for SpatialMaxPooling = (width, height, x_stride, y_stride, x_padding, y_padding)
@@ -58,33 +58,17 @@ use_cuda = 1
 if new_model==1 then
     cnn = nn.Sequential()
     cnn:add(nn.Reshape(3*32*32))
-    cnn:add(nn.Linear(3*32*32,3*32*32))
+    cnn:add(nn.Linear(3*32*32,32*32))
+    cnn:add(nn.ReLU())
+    cnn:add(nn.Linear(32*32,16*16))
+    cnn:add(nn.ReLU())
+    cnn:add(nn.Linear(16*16,32*32))
+    cnn:add(nn.ReLU())
+    cnn:add(nn.Linear(32*32,3*32*32))
     cnn:add(nn.Reshape(3,32,32))
-    cnn:add(nn.SpatialConvolution(3, 16, 3, 3, 1, 1, 1, 1))
-    cnn:add(nn.ReLU(true))
-    cnn:add(nn.SpatialMaxPooling(2, 2, 2, 2, 1, 1))
-    cnn:add(nn.SpatialConvolution(16, 8, 3, 3, 1, 1, 1, 1))
-    cnn:add(nn.ReLU(true))
-    cnn:add(nn.SpatialMaxPooling(2, 2, 2, 2, 1, 1))
-    cnn:add(nn.SpatialConvolution(8, 8, 3, 3, 1, 1, 1, 1))
-    cnn:add(nn.ReLU(true))
-    cnn:add(nn.SpatialMaxPooling(2, 2, 2, 2))
-
-    cnn:add(nn.SpatialConvolution(8, 8, 3, 3, 1, 1, 1, 1))
-    cnn:add(nn.ReLU(true))
-    cnn:add(nn.SpatialUpSamplingNearest(2))
-    cnn:add(nn.SpatialConvolution(8, 8, 3, 3, 1, 1, 1, 1))
-    cnn:add(nn.ReLU(true))
-    cnn:add(nn.SpatialUpSamplingNearest(2))
-    cnn:add(nn.SpatialConvolution(8, 16, 3, 3, 1, 1, 1, 1))
-    cnn:add(nn.ReLU(true))
-    cnn:add(nn.SpatialUpSamplingNearest(2))
-    cnn:add(nn.SpatialConvolution(16, 3, 3, 3, 1, 1, 1, 1))
-    cnn:add(nn.Sigmoid(true))
-    cnn:add(nn.View(3*32*32))
     print('Creating a new network')
 else
-    cnn = torch.load('model_full_cuda.torch')
+    cnn = torch.load('model_full.torch')
     print('Using existing network')
 end
 
@@ -99,10 +83,10 @@ iterations = 5
 
 for tt=1,iterations do
 	for iti=0,4 do
-		data_subset = torch.load('data_batch_' .. (iti+1) .. '.t7', 'ascii')
-		image_data = data_subset.data:t()
-		image_labels = data_subset.labels[1]
-		no_of_training_cases = 10000
+            data_subset = torch.load('data_batch_' .. (iti+1) .. '.t7', 'ascii')
+	    image_data = data_subset.data:t()
+	    image_labels = data_subset.labels[1]
+	    no_of_training_cases = 10000
 	    -- local cur_image = torch.rand(3,32,32)
 	    -- for j=1,32 do
 		-- 	for k=1,32 do
@@ -113,9 +97,10 @@ for tt=1,iterations do
 		-- end
 	    -- print(cur_image)
         -- Input can be either 3x32x32 or 3*32*32 vectors
+	    -- image.display{image=(image.scale(get_image(output * 255.0), 300, 300, 'bilinear')), win=w1}
 	    for p=1,no_of_training_cases do
-	        input = image_data[p]:double() / 255.0
-	        output = image_data[p]:double() / 255.0
+	    	input = image_data[p]:double() / 255.0
+	    	output = image_data[p]:double() / 255.0
 	        -- image.display{image=(image.scale(get_image(output), 300, 300, 'bilinear')), win=w1}
 	   	    if use_cuda == 1 then
 	   	    	input = input:cuda()
@@ -128,17 +113,17 @@ for tt=1,iterations do
 	        inputgrad = cnn:backward(input, df_errs)
 	        -- Accumulate gradients and back propogate
 	        cnn:updateParameters(0.05)
-	        -- input = input - 1 * inputgrad
-	        print(tt,iti,p,error(get_image(output),get_image(outputs_cur)))
+	        --input = input - 10 * inputgrad
+	        print(tt,iti,p,errs)
 	        --if p%20 == 1 then
-	        --	image.display{image=(image.scale(get_image(input * 255.0), 300, 300, 'bilinear')), win=w2}
-        	--	image.display{image=(image.scale(get_image(inputgrad * 255.0), 300, 300, 'bilinear')), win=w3}
+	        --	image.display{image=(image.scale(input * 255.0, 300, 300, 'bilinear')), win=w2}
+        	--	image.display{image=(image.scale(inputgrad * 255.0, 300, 300, 'bilinear')), win=w3}
         	--end
-        end
+            end
 	end
 	print('Done training, saving model if needed')
-	torch.save('model_full_cuda.torch', cnn)
+	torch.save('model_full.torch', cnn)
 end
 
 print('Done training, saving model if needed')
-torch.save('model_full_cuda.torch', cnn)
+torch.save('model_full.torch', cnn)
