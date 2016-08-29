@@ -9,8 +9,10 @@
 require "nn"
 require "image"
 require "math"
-require "qtwidget"
+--require "qtwidget"
 require "os"
+require "cunn"
+require "cutorch"
 
 --w1 = qtwidget.newwindow(300, 300)
 --w2 = qtwidget.newwindow(300, 300)
@@ -48,14 +50,13 @@ function error(a,b)
 end
 
 new_model = 1
-use_cuda = 0
+use_cuda = 1
 
 -- Parametrs for SpatialConvolution = (inputlayers, outputlayers, kernel_width, kernel_height, x_stride, y_stride, x_padding, y_padding)
 -- Parametrs for SpatialMaxPooling = (width, height, x_stride, y_stride, x_padding, y_padding)
 -- Input = 3*32*32 image, Output = 10 sized vector
 if new_model==1 then
     cnn = nn.Sequential()
-    cnn:add(nn.View(3,32,32))
     cnn:add(nn.Reshape(3*32*32))
     cnn:add(nn.Linear(3*32*32,3*32*32))
     cnn:add(nn.Reshape(3,32,32))
@@ -83,7 +84,7 @@ if new_model==1 then
     cnn:add(nn.View(3*32*32))
     print('Creating a new network')
 else
-    cnn = torch.load('model_full.torch')
+    cnn = torch.load('model_full_cuda.torch')
     print('Using existing network')
 end
 
@@ -94,7 +95,7 @@ if use_cuda == 1 then
 end
 
 -- Run the training 'iterations' number of times
-iterations = 3
+iterations = 5
 
 for tt=1,iterations do
 	for iti=0,4 do
@@ -123,7 +124,7 @@ for tt=1,iterations do
 	        outputs_cur = cnn:forward(input)
 	        local errs = criterion:forward(outputs_cur, output)
 	        local df_errs = criterion:backward(outputs_cur, output)
-	        -- cnn:zeroGradParameters()
+	        cnn:zeroGradParameters()
 	        inputgrad = cnn:backward(input, df_errs)
 	        -- Accumulate gradients and back propogate
 	        cnn:updateParameters(0.05)
@@ -136,8 +137,8 @@ for tt=1,iterations do
         end
 	end
 	print('Done training, saving model if needed')
-	torch.save('model_full.torch', cnn)
+	torch.save('model_full_cuda.torch', cnn)
 end
 
 print('Done training, saving model if needed')
-torch.save('model_full.torch', cnn)
+torch.save('model_full_cuda.torch', cnn)
