@@ -14,7 +14,7 @@ require "os"
 --require "cunn"
 --require "cutorch"
 
-w1 = qtwidget.newwindow(300, 300)
+--w1 = qtwidget.newwindow(300, 300)
 w2 = qtwidget.newwindow(300, 300)
 w3 = qtwidget.newwindow(300, 300) -- Visualize convnet layers
 
@@ -49,7 +49,7 @@ function error(a,b)
 	return err
 end
 
-new_model = 1
+new_model = 0
 use_cuda = 0
 
 -- Parametrs for SpatialConvolution = (inputlayers, outputlayers, kernel_width, kernel_height, x_stride, y_stride, x_padding, y_padding)
@@ -68,7 +68,7 @@ if new_model==1 then
     cnn:add(nn.Reshape(3,32,32))
     print('Creating a new network')
 else
-    cnn = torch.load('model_full.torch')
+    cnn = torch.load('model_normal.torch')
     print('Using existing network')
 end
 
@@ -97,10 +97,9 @@ for tt=1,iterations do
 		-- end
 	    -- print(cur_image)
         -- Input can be either 3x32x32 or 3*32*32 vectors
-	    -- image.display{image=(image.scale(get_image(output * 255.0), 300, 300, 'bilinear')), win=w1}
+	    	input = torch.rand(3,32,32)
+	    	output = image_data[1]:double() / 255.0
 	    for p=1,no_of_training_cases do
-	    	input = image_data[p]:double() / 255.0
-	    	output = image_data[p]:double() / 255.0
 	        -- image.display{image=(image.scale(get_image(output), 300, 300, 'bilinear')), win=w1}
 	   	    if use_cuda == 1 then
 	   	    	input = input:cuda()
@@ -112,18 +111,18 @@ for tt=1,iterations do
 	        cnn:zeroGradParameters()
 	        inputgrad = cnn:backward(input, df_errs)
 	        -- Accumulate gradients and back propogate
-	        cnn:updateParameters(0.05)
-	        --input = input - 10 * inputgrad
-	        print(tt,iti,p,errs)
-	        --if p%20 == 1 then
-	        --	image.display{image=(image.scale(input * 255.0, 300, 300, 'bilinear')), win=w2}
-        	--	image.display{image=(image.scale(inputgrad * 255.0, 300, 300, 'bilinear')), win=w3}
-        	--end
+	        -- cnn:updateParameters(0.05)
+	        -- input = input - 1 * inputgrad
+	        output = output + 0.1*outputs_cur
+		-- print(output:size())
+		print(tt,iti,p,errs)
+	        image.display{image=(image.scale(get_image(output) * 255.0, 300, 300, 'bilinear')), win=w2}
+        	image.display{image=(image.scale(input * 255.0, 300, 300, 'bilinear')), win=w3}
             end
 	end
-	print('Done training, saving model if needed')
-	torch.save('model_full.torch', cnn)
+	--print('Done training, saving model if needed')
+	--torch.save('model_full.torch', cnn)
 end
 
-print('Done training, saving model if needed')
-torch.save('model_full.torch', cnn)
+--print('Done training, saving model if needed')
+--torch.save('model_full.torch', cnn)
